@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متابعة ولي الأمر | الصعيدي</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi+Fun:wght@700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <style>
+        :root { 
+            --primary-color: #0d1e2b; --secondary-color: #d4af37; --card-bg: #1e293b;
+            --text-main: #f8fafc; --border-color: #475569; --input-bg: #334155;
+            --golden-gradient: linear-gradient(135deg, #ffd700 0%, #d4af37 50%, #b8860b 100%);
+        }
+        
+        body { 
+            background-color: var(--primary-color); color: var(--text-main); 
+            font-family: 'Aref Ruqaa', serif; margin: 0; padding: 15px; 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+        
+        header { 
+            background-color: #0b1821; width: 100%; padding: 25px 0; text-align: center; 
+            border-bottom: 5px solid var(--secondary-color); border-radius: 0 0 25px 25px; 
+            margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        header h1 { 
+            margin: 0; font-size: 2.8rem; font-family: 'Reem Kufi Fun', sans-serif; 
+            background: var(--golden-gradient); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; font-weight: 700;
+        }
+        
+        .card { 
+            background: var(--card-bg); padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 450px; 
+            margin-bottom: 20px; border-top: 5px solid var(--secondary-color); text-align: center;
+        }
+        
+        .btn-gold { 
+            background: var(--golden-gradient); color: #000; border: none; 
+            padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; 
+            cursor: pointer; font-family: 'Aref Ruqaa'; font-size: 1.5rem; margin-top: 15px; transition: 0.3s;
+        }
+        .btn-gold:hover { transform: scale(1.03); }
+
+        input { 
+            width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid var(--border-color); 
+            border-radius: 12px; font-family: 'Aref Ruqaa'; font-size: 1.4rem; 
+            background-color: var(--input-bg); color: #fff; text-align: center; box-sizing: border-box;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden; }
+        th { background: #0b1821; color: var(--secondary-color); padding: 12px; font-size: 1.3rem; }
+        td { padding: 12px; border-bottom: 1px solid var(--border-color); font-size: 1.2rem; }
+
+        .hw-note { font-size: 1.1rem; color: #fbbf24; display: block; margin-top: 5px; font-weight: bold; background: rgba(251, 191, 36, 0.1); padding: 5px; border-radius: 8px; border: 1px dashed #fbbf24; }
+        .tag { padding: 4px 10px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; }
+        .tag-ok { background: #16a34a; color: white; }
+        .tag-no { background: #dc2626; color: white; }
+
+        /* ستايل الكاميرا */
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 3px solid var(--secondary-color); display: none; margin-bottom: 15px; background: #000; }
+
+        /* ستايل إنستا باي */
+        .instapay-box {
+            background: linear-gradient(135deg, #1b0a3d 0%, #3e1b72 100%);
+            border: 2px solid #6b21a8;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(107, 33, 168, 0.4);
+        }
+        .instapay-box h3 { margin: 0 0 10px 0; font-family: 'Reem Kufi Fun'; color: #d8b4fe; font-size: 1.8rem; }
+        .instapay-number { font-size: 2rem; font-weight: bold; letter-spacing: 2px; color: #fff; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin: 10px 0; font-family: monospace; }
+        .whatsapp-btn { background: #25D366; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-size: 1.3rem; font-family: 'Aref Ruqaa'; font-weight: bold; cursor: pointer; text-decoration: none; display: block; box-sizing: border-box; transition: 0.3s; }
+        .whatsapp-btn:hover { background: #128C7E; transform: scale(1.02); }
+
+    </style>
+</head>
+<body>
+
+    <header><h1>تـقـريـر المـتـابـعـة</h1></header>
+
+    <div class="card" id="loginCard">
+        <h2 style="color:var(--secondary-color); font-size:2rem; margin-top:0;">دخول أولياء الأمور 👨‍👩‍👧</h2>
+        
+        <div id="reader"></div>
+        <button class="btn-gold" id="startCamBtn" onclick="openScanner()" style="background:#10b981; color:white;">مسح كود الكارنيه 📸</button>
+        <button class="btn-gold" id="stopCamBtn" style="display:none; background:#dc2626; color:white;" onclick="closeScanner()">إغلاق الكاميرا ❌</button>
+
+        <div style="margin: 20px 0; color:var(--border-color);">ـــــ أو ابحث يدوياً ـــــ</div>
+
+        <input type="text" id="parentSearch" placeholder="الاسم، الجلوس، أو الموبايل...">
+        <button class="btn-gold" id="loginBtn" onclick="parentLogin()">عرض التقرير 🚀</button>
+    </div>
+
+    <div id="reportDashboard" style="display: none; width: 100%; max-width: 450px;">
+        <div class="card">
+            <h2 id="stName" style="margin:0; font-size:2.2rem; color:white;"></h2>
+            <div style="margin:15px 0; font-size:1.4rem; border:2px dashed var(--secondary-color); padding:15px; border-radius:12px; background:rgba(212, 175, 55, 0.05);">
+                إجمالي غياب الطالب: <span id="totalAbs" style="color:#ef4444; font-weight:bold; font-size:1.8rem;">0</span> حصص
+            </div>
+            <button class="btn-gold" style="padding:10px; font-size:1.2rem; background:#475569; color:white;" onclick="location.reload()">رجوع للبحث 🚪</button>
+        </div>
+
+        <div class="instapay-box">
+            <h3>دفع المصروفات 💸</h3>
+            <p style="margin: 0; font-size: 1.2rem; opacity: 0.9;">أرسل المصروفات عبر InstaPay على الرقم:</p>
+            <div class="instapay-number">01012345678</div>
+            <p style="font-size: 1rem; opacity: 0.8; margin-bottom: 10px;">(رقم السكرتارية / المستر)</p>
+            <a href="https://wa.me/201012345678?text=السلام عليكم، مرفق إيصال دفع مصروفات الطالب: " target="_blank" class="whatsapp-btn">
+                إرسال إيصال الدفع واتساب 📲
+            </a>
+        </div>
+
+        <div class="card">
+            <h3 style="color:var(--secondary-color); margin-top:0; font-size:1.8rem;">سجل الحضور والواجب 📊</h3>
+            <table>
+                <thead>
+                    <tr><th>الحصة</th><th>الحضور</th><th>الواجب والملاحظات</th></tr>
+                </thead>
+                <tbody id="logsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyD-Xmz7v1ZbnTjuXpCXAxPb8pEMiQ83zYY", authDomain: "els3idy-system.firebaseapp.com", databaseURL: "https://els3idy-system-default-rtdb.firebaseio.com", projectId: "els3idy-system" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.database();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const directId = urlParams.get('id');
+        if(directId) { document.getElementById('loginCard').style.display = 'none'; showReport(directId); }
+
+        // --- نظام الكاميرا ---
+        let html5QrCode;
+        function openScanner() {
+            document.getElementById('reader').style.display = 'block';
+            document.getElementById('startCamBtn').style.display = 'none';
+            document.getElementById('stopCamBtn').style.display = 'block';
+            
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, { fps: 10, qrbox: 250 }, 
+                (text) => {
+                    let sid = text.includes("?id=") ? text.split("?id=")[1] : text;
+                    closeScanner();
+                    showReport(sid);
+                }, 
+                (err) => {}
+            ).catch((err) => {
+                alert("⚠️ الكاميرا لم تفتح! تأكد من إعطاء الصلاحية للمتصفح.");
+                closeScanner();
+            });
+        }
+
+        function closeScanner() {
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('startCamBtn').style.display = 'block';
+            document.getElementById('stopCamBtn').style.display = 'none';
+            if(html5QrCode) { html5QrCode.stop().then(() => html5QrCode.clear()); }
+        }
+
+        // --- نظام البحث المانيوال ---
+        function parentLogin() {
+            let q = document.getElementById('parentSearch').value.trim();
+            if(!q) return alert("من فضلك اكتب بيانات الطالب!");
+
+            let btn = document.getElementById('loginBtn');
+            btn.innerText = "جاري البحث... ⏳";
+
+            db.ref('teacher_app/students').once('value', snap => {
+                let foundId = null;
+                snap.forEach(child => {
+                    let s = child.val();
+                    let sName = s.name ? s.name : "";
+                    let sSeat = s.seatNumber ? s.seatNumber.toString() : "";
+                    let sPhone = s.sPhone ? s.sPhone.toString() : "";
+                    let pPhone = s.pPhone ? s.pPhone.toString() : "";
+
+                    if(sName.includes(q) || sSeat === q || sPhone === q || pPhone === q) {
+                        foundId = child.key;
+                    }
+                });
+
+                btn.innerText = "عرض التقرير 🚀";
+
+                if(foundId) { 
+                    document.getElementById('loginCard').style.display = 'none';
+                    showReport(foundId); 
+                } else { alert("لم يتم العثور على طالب بهذه البيانات! ❌"); }
+            });
+        }
+
+        // --- عرض التقرير ---
+        function showReport(sid) {
+            db.ref('teacher_app/students/' + sid).once('value', snap => {
+                let s = snap.val();
+                if(!s) { alert("هذا الحساب غير موجود!"); return; }
+
+                document.getElementById('loginCard').style.display = 'none';
+                document.getElementById('reportDashboard').style.display = 'block';
+                document.getElementById('stName').innerText = s.name;
+
+                // تحديث رسالة الواتس اب باسم الطالب
+                let whatsappBtn = document.querySelector('.whatsapp-btn');
+                whatsappBtn.href = `https://wa.me/201012345678?text=السلام عليكم، مرفق إيصال دفع مصروفات الطالب: ${s.name} - رقم الجلوس: ${s.seatNumber}`;
+
+                let curM = new Date().getMonth();
+                let sessions = s.data[curM].sessions;
+                let html = '', absTotal = 0;
+
+                for(let m=6; m<=curM; m++) {
+                    if(s.data[m] && s.data[m].sessions.some(x=>x.attended)) {
+                        s.data[m].sessions.forEach(ss => { if(!ss.attended) absTotal++; });
+                    }
+                }
+                document.getElementById('totalAbs').innerText = absTotal;
+
+                sessions.forEach((sess, i) => {
+                    let hw = "-";
+                    let n = sess.notes ? `<span class="hw-note">📍 ملاحظة: ${sess.notes}</span>` : "";
+                    if(sess.attended) {
+                        if(sess.score == 10) hw = "ممتاز ✅";
+                        else if(sess.score == 5) hw = "ناقص ⚠️";
+                        else if(sess.score == 2) hw = "ضعيف ❌";
+                        else hw = "لم يسلم 🕳️";
+                    }
+                    html += `<tr><td style="font-weight:bold;">${i+1}</td><td><span class="tag ${sess.attended?'tag-ok':'tag-no'}">${sess.attended?'حاضر':'غائب'}</span></td><td>${sess.attended ? hw : '-'} ${n}</td></tr>`;
+                });
+                document.getElementById('logsBody').innerHTML = html;
+            });
+        }
+    </script>
+</body>
+</html>

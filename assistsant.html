@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رادار المساعد الذكي | الصعيدي</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Reem+Kufi+Fun:wght@700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <style>
+        :root { 
+            --primary-color: #0d1e2b; 
+            --secondary-color: #d4af37; 
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --input-bg: #334155;
+            --border-color: #475569;
+            --golden-gradient: linear-gradient(135deg, #ffd700 0%, #d4af37 50%, #b8860b 100%);
+        }
+        
+        body { 
+            background-color: var(--primary-color); 
+            color: var(--text-main); 
+            font-family: 'Aref Ruqaa', serif; 
+            margin: 0; padding: 15px; 
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh;
+        }
+        
+        header { 
+            background-color: #0b1821; width: 100%; padding: 25px 0; text-align: center; 
+            border-bottom: 5px solid var(--secondary-color); border-radius: 0 0 25px 25px; 
+            margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        }
+
+        header h1 { 
+            margin: 0; font-size: 2.8rem; font-family: 'Reem Kufi Fun', sans-serif; 
+            background: var(--golden-gradient); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; font-weight: 700;
+        }
+        
+        .card { 
+            background: var(--card-bg); padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); width: 100%; max-width: 450px; 
+            margin-bottom: 20px; border-top: 5px solid var(--secondary-color); text-align: center;
+        }
+        
+        .btn { 
+            background: var(--golden-gradient); color: #000; border: none; 
+            padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; 
+            cursor: pointer; font-family: 'Aref Ruqaa'; font-size: 1.5rem; margin-top: 10px; transition: 0.3s;
+        }
+        
+        input, select { 
+            width: 100%; padding: 14px; margin-bottom: 15px; border: 2px solid var(--border-color); 
+            border-radius: 12px; font-family: 'Aref Ruqaa'; font-size: 1.4rem; 
+            background-color: var(--input-bg); color: #fff; text-align: center; box-sizing: border-box;
+        }
+        
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 3px solid var(--secondary-color); background: black; margin-bottom: 15px; display: none; }
+
+        .result-box { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px; margin-top: 20px; border: 1px solid var(--border-color); display: none; }
+        
+        .alert-box { padding: 10px; border-radius: 10px; margin-top: 10px; font-weight: bold; font-size: 1.2rem; }
+        .absent-last { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px dashed #ef4444; }
+        .total-absent { background: rgba(212, 175, 55, 0.1); color: var(--secondary-color); border: 1px solid var(--secondary-color); margin-top: 15px; }
+        .session-info { color: #d4af37; font-size: 1.3rem; margin-bottom: 10px; font-weight: bold; }
+        .status-ok { color: #22c55e; font-size: 1.4rem; margin-top: 10px; }
+        .assistant-info { color: var(--secondary-color); font-size: 1.2rem; margin-bottom: 15px; font-weight: bold; }
+        
+    </style>
+</head>
+<body>
+
+    <header><h1>رادار المساعد الذكي</h1></header>
+
+    <div class="card" id="loginScreen">
+        <h2>دخول الطاقم 🕵️‍♂️</h2>
+        <select id="astSelect"><option value="">مين المساعد؟</option></select>
+        <input type="password" id="astPin" placeholder="الكود السري">
+        <button class="btn" onclick="login()">فتح الرادار 🚀</button>
+    </div>
+
+    <div id="radarScreen" style="display: none; width: 100%; max-width: 450px;">
+        <div class="card">
+            <div class="assistant-info" id="activeAssistant"></div>
+
+            <div id="reader"></div>
+            <button class="btn" id="startCamBtn" onclick="openScanner()" style="background:#10b981; color:white;">فتح الكاميرا 📸</button>
+            <button class="btn" id="stopCamBtn" style="display:none; background:#dc2626; color:white;" onclick="closeScanner()">قفل الكاميرا ❌</button>
+
+            <input type="number" id="searchQuery" placeholder="رقم الموبايل أو الجلوس" style="margin-top:20px;">
+            <button class="btn" onclick="processAttendance()">تسجيل الحضور أوتوماتيك ✅</button>
+            
+            <div class="result-box" id="resultArea">
+                <div id="studentName" style="font-size: 1.8rem; color:white; margin-bottom:10px;"></div>
+                
+                <div id="sessionDetected" class="session-info"></div>
+                <div id="lastSessionAlert" class="alert-box absent-last" style="display:none;">⚠️ الطالب غاب الحصة الماضية!</div>
+                <div id="totalYearAbsent" class="alert-box total-absent"></div>
+                
+                <div id="statusMessage" class="status-ok"></div>
+            </div>
+
+            <button class="btn" style="background:#475569; color:white; margin-top:30px;" onclick="logout()">خروج نهائي 🚪</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-Xmz7v1ZbnTjuXpCXAxPb8pEMiQ83zYY",
+            authDomain: "els3idy-system.firebaseapp.com",
+            databaseURL: "https://els3idy-system-default-rtdb.firebaseio.com",
+            projectId: "els3idy-system"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let astName = localStorage.getItem('alsaidi_ast_name');
+        let assistantsData = {};
+
+        // جلب المساعدين من الداتا بيز
+        db.ref('teacher_app/assistants').on('value', snap => {
+            assistantsData = snap.val() || {};
+            let opts = '<option value="">مين المساعد؟</option>';
+            for(let id in assistantsData) { opts += `<option value="${id}">${assistantsData[id].name}</option>`; }
+            document.getElementById('astSelect').innerHTML = opts;
+        });
+
+        if(astName) { showRadar(); }
+
+        function login() {
+            let id = document.getElementById('astSelect').value;
+            let pin = document.getElementById('astPin').value;
+            if(id && assistantsData[id].pin == pin) {
+                localStorage.setItem('alsaidi_ast_name', assistantsData[id].name);
+                location.reload();
+            } else { alert("الكود السري غلط يا بطل! ❌"); }
+        }
+
+        function showRadar() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('radarScreen').style.display = 'block';
+            document.getElementById('activeAssistant').innerText = "المساعد الحالي: " + astName;
+        }
+
+        function logout() {
+            localStorage.removeItem('alsaidi_ast_name');
+            location.reload();
+        }
+
+        function getAutoSessionIndex() {
+            let day = new Date().getDate();
+            if (day <= 4) return 0; if (day <= 8) return 1; if (day <= 12) return 2; if (day <= 16) return 3;
+            if (day <= 20) return 4; if (day <= 24) return 5; if (day <= 28) return 6; return 7;
+        }
+
+        // الكاميرا مع التعديل بتاع الرسايل عشان ميفضحناش
+        let html5QrCode;
+        function openScanner() {
+            document.getElementById('reader').style.display = 'block';
+            document.getElementById('startCamBtn').style.display = 'none';
+            document.getElementById('stopCamBtn').style.display = 'block';
+            
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: 250 }, 
+                (text) => {
+                    let sid = text.includes("?id=") ? text.split("?id=")[1] : text;
+                    closeScanner();
+                    processById(sid);
+                }, 
+                (err) => {}
+            ).catch((err) => {
+                alert("⚠️ الكاميرا مشتغلتش!\nالسبب ممكن يكون:\n1. المتصفح مانع الصلاحية (اضغط على القفل فوق واعمل السماح).\n2. فاتح الملف من الكمبيوتر مباشرة (لازم يترفع على استضافة بـ https).\n3. بتجرب من جهاز مفيهوش كاميرا خلفية.");
+                closeScanner();
+            });
+        }
+
+        function closeScanner() {
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('startCamBtn').style.display = 'block';
+            document.getElementById('stopCamBtn').style.display = 'none';
+            if(html5QrCode) { html5QrCode.stop().then(() => html5QrCode.clear()); }
+        }
+
+        function processById(sid) {
+            db.ref('teacher_app/students/' + sid).once('value', snap => {
+                if(snap.exists()) handleAttendance(snap.val(), sid);
+            });
+        }
+
+        function processAttendance() {
+            let query = document.getElementById('searchQuery').value.trim();
+            if(!query) return;
+            db.ref('teacher_app/students').once('value', snap => {
+                let found = null, sid = null;
+                snap.forEach(c => { if(c.val().sPhone == query || c.val().seatNumber == query) { found = c.val(); sid = c.key; } });
+                if(found) handleAttendance(found, sid);
+                else alert("الطالب غير موجود!");
+            });
+        }
+
+        function handleAttendance(student, sid) {
+            let curM = new Date().getMonth();
+            let sessions = student.data[curM].sessions;
+            let targetIdx = getAutoSessionIndex();
+            
+            document.getElementById('resultArea').style.display = 'block';
+            document.getElementById('studentName').innerText = student.name;
+            document.getElementById('sessionDetected').innerText = `أوتوماتيك: نحن الآن في الحصة رقم (${targetIdx + 1})`;
+
+            let yearAbsenceCount = 0;
+            for (let m = 6; m <= 11; m++) {
+                if (!student.data[m]) continue;
+                let mSessions = student.data[m].sessions;
+                let hasAnyAttendanceInMonth = mSessions.some(s => s.attended === true);
+                if (hasAnyAttendanceInMonth) {
+                    mSessions.forEach((s, idx) => {
+                        if (m < curM) { if (!s.attended) yearAbsenceCount++; }
+                        else if (m === curM) { if (idx < targetIdx && !s.attended) yearAbsenceCount++; }
+                    });
+                }
+            }
+            document.getElementById('totalYearAbsent').innerText = `إجمالي الغياب الفعلي (منذ شهر 7): (${yearAbsenceCount})`;
+
+            let wasAbsentLast = false;
+            if (targetIdx > 0) {
+                if (!sessions[targetIdx - 1].attended) wasAbsentLast = true;
+            } else if (curM > 6) {
+                let prevMonthSessions = student.data[curM - 1].sessions;
+                if (!prevMonthSessions[7].attended) wasAbsentLast = true;
+            }
+            document.getElementById('lastSessionAlert').style.display = wasAbsentLast ? 'block' : 'none';
+
+            if (!sessions[targetIdx].attended) {
+                sessions[targetIdx].attended = true;
+                sessions[targetIdx].attendedBy = astName;
+                db.ref(`teacher_app/students/${sid}/data/${curM}/sessions`).set(sessions).then(() => {
+                    document.getElementById('statusMessage').innerText = `✅ تم تسجيل الحضور بنجاح!`;
+                    document.getElementById('searchQuery').value = '';
+                });
+            } else {
+                document.getElementById('statusMessage').innerText = "الحصة دي متسجلة حضور مسبقاً! 👌";
+            }
+        }
+    </script>
+</body>
+</html>

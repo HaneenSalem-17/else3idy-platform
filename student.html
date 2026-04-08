@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الطالب | الصعيدي</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Changa:wght@700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        /* الألوان المتغيرة للدارك واللايت مود */
+        :root { 
+            --primary-color: #134e4a; 
+            --secondary-color: #d4af37; 
+            
+            --bg-color: #f4f7f6; 
+            --card-bg: #ffffff;
+            --text-main: #000000;
+            --text-muted: #475569;
+            --heading-color: #042f2e;
+            --input-bg: #ffffff;
+            --border-color: #cbd5e1;
+            
+            --mat-theme: #7c3aed;
+        }
+        
+        body.dark-mode {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --heading-color: #d4af37; 
+            --input-bg: #334155;
+            --border-color: #475569;
+            
+            --mat-theme: #a855f7;
+        }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        header { 
+            background-color: var(--primary-color); 
+            color: white; 
+            width: 100%; 
+            padding: 20px 0; 
+            text-align: center; 
+            border-bottom: 5px solid var(--secondary-color); 
+            border-radius: 0 0 20px 20px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .btn-theme {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Cairo';
+            font-weight: bold;
+        }
+        
+        .logo-img { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            background: var(--primary-color); 
+            border: 3px solid var(--secondary-color);
+            padding: 3px; 
+            object-fit: cover; 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+        
+        .card { 
+            background: var(--card-bg); 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 500px; 
+            box-sizing: border-box; 
+            margin-bottom: 20px; 
+            border-top: 5px solid var(--primary-color); 
+            transition: 0.3s;
+        }
+        
+        h2 { 
+            color: var(--heading-color); 
+            font-family: 'Changa'; 
+            text-align: center; 
+            margin-top: 0; 
+            font-size: 1.4rem; 
+        }
+        
+        .qr-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            margin-top: 20px; 
+        }
+        
+        .qr-box { 
+            background: #fff; /* الباركود دايماً لازم خلفيته بيضا عشان يتقرأ */
+            padding: 15px; 
+            border-radius: 15px; 
+            border: 4px dashed var(--secondary-color); 
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.15); 
+            display: inline-block; 
+        }
+        
+        .qr-box img { margin: 0 auto; width: 180px !important; height: 180px !important; }
+        
+        .months-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        
+        .month-box { 
+            background: var(--bg-color); 
+            border: 2px solid var(--border-color); 
+            padding: 12px; 
+            border-radius: 10px; 
+            text-align: center; 
+            cursor: pointer; 
+            position: relative; 
+            transition: 0.3s; 
+        }
+        
+        .month-box:hover { 
+            border-color: var(--secondary-color); 
+            transform: translateY(-2px);
+        }
+        
+        .month-name { font-weight: bold; display: block; font-size: 0.9rem; color: var(--text-main);}
+        .paid-badge { position: absolute; top: -8px; left: -8px; font-size: 1.2rem; background: var(--card-bg); border-radius: 50%;}
+        
+        .sessions-table { width: 100%; margin-top: 20px; border-collapse: collapse; display: none; }
+        .sessions-table th { background: var(--heading-color); color: var(--card-bg); padding: 10px; font-size: 0.9rem; font-family: 'Changa'; }
+        .sessions-table td { border: 1px solid var(--border-color); padding: 10px; text-align: center; font-size: 0.9rem; font-weight: bold;}
+        
+        .btn { 
+            background: var(--secondary-color); 
+            color: #042f2e; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 10px; 
+            width: 100%; 
+            font-weight: 900; 
+            cursor: pointer; 
+            font-family: 'Cairo'; 
+            margin-top: 15px; 
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .btn:hover { background: #b8860b; color: white; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 15px; 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            font-family: 'Cairo'; 
+            font-size: 1rem;
+            box-sizing: border-box; 
+            background-color: var(--input-bg);
+            color: var(--text-main);
+        }
+        select:focus, input:focus { outline: none; border-color: var(--secondary-color); }
+        select option[disabled] { color: red; font-weight: bold; }
+        
+        .level-card { text-align: center; padding: 12px; border-radius: 10px; font-weight: 900; margin-top: 15px; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 2px dashed #22c55e; font-size: 1.1rem;}
+        .seat-card { text-align: center; padding: 12px; border-radius: 10px; font-weight: 900; margin-top: 15px; background: rgba(212, 175, 55, 0.1); color: var(--heading-color); border: 2px dashed var(--secondary-color); font-size: 1.2rem;}
+        
+        .notification-item { padding: 12px; margin-bottom: 10px; border-radius: 8px; font-size: 0.95rem; background: var(--bg-color); border-right: 4px solid var(--secondary-color); color: var(--text-main);}
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); } 
+        .modal-content { background: var(--card-bg); color: var(--text-main); width: 90%; max-width: 450px; border-radius: 20px; padding: 30px; text-align:center; position: relative; animation: modalPop 0.3s; border-top: 6px solid var(--primary-color);} 
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        /* إعدادات طباعة ستيكر الواجب الخاصة بالطالب */
+        @media print {
+            body * { visibility: hidden; background: white !important; color: black !important;} 
+            #printStickerArea, #printStickerArea * { visibility: visible; }
+            #printStickerArea { 
+                position: absolute; left: 0; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; 
+            }
+            .sticker-card {
+                border: 2px solid #000; padding: 20px; border-radius: 10px; width: 250px; text-align: center; background: white;
+            }
+            .no-print { display: none !important; } 
+        }
+    </style>
+</head>
+<body>
+    <header class="no-print">
+        <button class="btn-theme" id="themeBtn" onclick="toggleTheme()">🌙 دارك</button>
+        <img src="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg" class="logo-img">
+        <h1 style="font-family: 'Changa'; margin:0; font-size: 1.4rem; color: var(--secondary-color); text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">مـنـصـة الـطـالـب</h1>
+    </header>
+
+    <div class="card no-print" id="regForm" style="display: none;">
+        <h2>تسجيل حساب جديد ✍️</h2>
+        <input type="text" id="sName" placeholder="الاسم رباعي بالعربي">
+        <select id="sYear" onchange="loadFilteredGroups()">
+            <option value="">اختار سنتك الدراسية...</option>
+            <option value="أولى إعدادي">أولى إعدادي</option><option value="تانية إعدادي">تانية إعدادي</option><option value="تالتة إعدادي">تالتة إعدادي</option><option value="أولى ثانوي">أولى ثانوي</option><option value="تانية ثانوي">تانية ثانوي</option><option value="تالتة ثانوي">تالتة ثانوي</option>
+        </select>
+        <select id="sGroup">
+            <option value="">اختار السنة أولاً...</option>
+        </select>
+        <select id="sPayMethod" style="border-color: var(--secondary-color); background-color: rgba(212, 175, 55, 0.1); font-weight: bold; color: var(--heading-color);">
+            <option value="month">نظام الدفع: بالشهر 📅</option>
+            <option value="session">نظام الدفع: بالحصة 🎟️</option>
+        </select>
+        <input type="number" id="sPhone" placeholder="رقم تليفونك (واتساب)">
+        <input type="number" id="pPhone" placeholder="رقم ولي الأمر">
+        <select id="sLoc">
+            <option value="داخل كوم حمادة">داخل الحي🏠</option>
+            <option value="خارج كوم حمادة">خارج الحي🚌</option>
+        </select>
+        <button class="btn" onclick="register()">إنشاء الحساب 🚀</button>
+    </div>
+
+    <div id="printStickerArea" style="display:none;" class="sticker-card">
+        <h3 style="margin:0 0 10px 0; font-family:'Changa';">أحمد الصعيدي 📐</h3>
+        <hr>
+        <h4 id="stickerName" style="margin:15px 0; font-size: 1.2rem;">اسم الطالب</h4>
+        <h2 id="stickerSeat" style="margin:10px 0;">رقم الجلوس: 00000</h2>
+        <div id="stickerQR" style="margin: 20px auto; width:150px; border: 2px solid #eee; padding: 5px; border-radius: 10px;"></div>
+        <small style="font-weight:bold;">يرجى لصق هذه البطاقة على المذكرة 📝</small>
+    </div>
+
+    <div id="studentDashboard" style="display: none; width: 100%; max-width: 500px;" class="no-print">
+        
+        <div class="card" id="materialsCard" style="display: none; border-top-color: var(--mat-theme); background-color: rgba(124, 58, 237, 0.05);">
+            <h2 style="color: var(--mat-theme);">📦 أدوات الترم</h2>
+            <div style="background:var(--card-bg); padding:15px; border-radius:10px; display:flex; justify-content:space-around; text-align:center; margin-top:15px; border: 1px solid var(--border-color);">
+                <div><span id="stBook" style="font-size:1.4rem;">❌</span><br><small style="font-weight:bold; color:var(--text-muted);">الكتاب</small></div>
+                <div><span id="stNotebook" style="font-size:1.4rem;">❌</span><br><small style="font-weight:bold; color:var(--text-muted);">الكراسة</small></div>
+                <div><span id="stNotes" style="font-size:1.4rem;">❌</span><br><small style="font-weight:bold; color:var(--text-muted);">المذكرة</small></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>الكارنيه الشامل 🪪</h2>
+            <div class="qr-container"><div class="qr-box" id="qrMain"></div></div>
+            <h3 id="displayName" style="text-align:center; margin: 20px 0 0 0; color: var(--heading-color); font-size: 1.5rem;"></h3>
+            <div id="seatBadge" class="seat-card">رقم الجلوس: <span id="seatNumVal">جاري التحميل...</span></div>
+            <div id="levelBadge" class="level-card">المستوى: جاري الحساب... ⏳</div>
+            <div id="payMethodBadge" style="text-align:center; margin-top:15px; font-weight:bold; color:var(--primary-color); background: rgba(19, 78, 74, 0.1); padding: 8px; border-radius: 8px; border: 1px solid var(--border-color);"></div>
+            
+            <button class="btn" style="background: var(--primary-color); color: white;" onclick="document.getElementById('receiptModal').style.display='flex'">💸 الدفع أونلاين (إنستاباي/محافظ)</button>
+            <button class="btn" style="background: var(--heading-color); color: var(--secondary-color);" onclick="printSticker()">🖨️ طباعة ستيكر المذكرة الخاص بي</button>
+        </div>
+
+        <div class="card">
+            <h2>صندوق الرسائل والواجبات 🔔</h2>
+            <div id="notificationsBox" style="max-height: 250px; overflow-y: auto; background: var(--bg-color); border-radius: 10px; padding: 10px; border: 1px solid var(--border-color);"></div>
+        </div>
+
+        <div class="card">
+            <h2>متابعة الشهور 📊</h2>
+            <div class="months-grid" id="monthsGrid"></div>
+            
+            <table class="sessions-table" id="sessionsTable">
+                <thead>
+                    <tr>
+                        <th>الحصة</th>
+                        <th>الحضور</th>
+                        <th>الواجب</th>
+                        <th>الدفع</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody"></tbody>
+            </table>
+            
+            <div id="examScoreBox" style="display:none; margin-top:20px; padding:15px; background:rgba(212, 175, 55, 0.1); border-radius:10px; border:2px dashed var(--secondary-color); text-align:center; font-weight:bold; color:var(--heading-color); font-size: 1.2rem;">
+                درجة الامتحان الشامل: <span id="examScoreValue" style="color:var(--secondary-color); font-size: 1.4rem;">0</span> / 50
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="receiptModal">
+        <div class="modal-content">
+            <h2 style="color:var(--primary-color); font-family:'Changa'; margin-top:0;">تأكيد الدفع أونلاين 💸</h2>
+            
+            <div style="background: var(--bg-color); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px dashed var(--secondary-color); text-align: right;">
+                <p style="margin:0 0 10px 0; font-weight:bold; color:var(--heading-color);">1. حول المبلغ على:</p>
+                <p style="margin:0; color:var(--primary-color); font-weight:bold;">فودافون كاش / إنستاباي: <br><span style="font-size:1.4rem; letter-spacing:2px;">01000000000</span></p>
+                
+                <hr style="border-color: var(--border-color); margin: 15px 0;">
+                
+                <p style="margin:0 0 10px 0; font-weight:bold; color:var(--heading-color);">2. ابعت رسالة للواتساب:</p>
+                <p style="margin:0; color:var(--text-muted); font-size:0.95rem; line-height: 1.5;">ابعت سكرين شوت التحويل + اسمك أو الكيو آر كود بتاعك على رقم الواتساب: <br><span style="color:var(--primary-color); font-weight:bold; font-size:1.1rem;">01000000000</span></p>
+            </div>
+            
+            <p style="font-weight:bold; color:var(--heading-color); text-align:right; margin:5px 0;">اختار الشهر اللي دفعته:</p>
+            <select id="rMonth" style="border-color:var(--primary-color); font-weight:bold;">
+                <option value="0">شهر يناير</option><option value="1">شهر فبراير</option><option value="2">شهر مارس</option><option value="3">شهر أبريل</option><option value="4">شهر مايو</option><option value="5">شهر يونيو</option><option value="6">شهر يوليو</option><option value="7">شهر أغسطس</option><option value="8">شهر سبتمبر</option><option value="9">شهر أكتوبر</option><option value="10">شهر نوفمبر</option><option value="11">شهر ديسمبر</option>
+            </select>
+            
+            <button id="btnNotify" class="btn" style="background:var(--primary-color); color:white;" onclick="notifyPayment()">أنا بعت السكرين على الواتساب 🚀</button>
+            <button class="btn" style="background:#94a3b8; color:white; margin-top:10px;" onclick="document.getElementById('receiptModal').style.display='none'">إلغاء ❌</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-Xmz7v1ZbnTjuXpCXAxPb8pEMiQ83zYY", 
+            authDomain: "els3idy-system.firebaseapp.com",
+            databaseURL: "https://els3idy-system-default-rtdb.firebaseio.com", 
+            projectId: "els3idy-system",
+        };
+        
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+        // شيلنا الـ Storage من هنا كمان
+        
+        let groupsData = {}; let studentCounts = {}; let currentUserData = null;
+
+        // إعدادات الدارك مود
+        if(localStorage.getItem('alsaidi_theme_student') === 'dark') { document.body.classList.add('dark-mode'); }
+        window.onload = function() { if(document.body.classList.contains('dark-mode')) { document.getElementById('themeBtn').innerText = '☀️ فاتح'; } };
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            let isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('alsaidi_theme_student', isDark ? 'dark' : 'light');
+            document.getElementById('themeBtn').innerText = isDark ? '☀️ فاتح' : '🌙 دارك';
+        }
+
+        const savedId = localStorage.getItem('alsaidi_student_id');
+        if (savedId) { checkDeviceAndShow(savedId); } 
+        else { showRegistrationForm(); }
+
+        function showRegistrationForm() { 
+            document.getElementById('studentDashboard').style.display = 'none'; 
+            document.getElementById('regForm').style.display = 'block'; 
+            loadDataForRegistration(); 
+        }
+
+        function loadDataForRegistration() { 
+            db.ref('teacher_app').on('value', snap => { 
+                const data = snap.val() || {}; 
+                groupsData = data.groups || {}; 
+                studentCounts = {};
+                for (let sid in data.students || {}) { 
+                    let gid = data.students[sid].groupId; 
+                    studentCounts[gid] = (studentCounts[gid] || 0) + 1; 
+                }
+                if(document.getElementById('sYear').value) { loadFilteredGroups(); }
+            }); 
+        }
+
+        function loadFilteredGroups() {
+            const year = document.getElementById('sYear').value; 
+            let options = '<option value="">اختار المجموعة...</option>';
+            
+            for (let id in groupsData) { 
+                if (groupsData[id].year === year) {
+                    let g = groupsData[id]; 
+                    let count = studentCounts[id] || 0; 
+                    let maxLimit = (g.type === 'خاصة') ? 60 : 120;
+                    
+                    if(count >= maxLimit) { options += `<option value="${id}" disabled>🚫 ${g.displayName} - مكتملة</option>`; } 
+                    else { options += `<option value="${id}">✅ ${g.displayName} - باقي ${maxLimit - count} مكان</option>`; }
+                }
+            }
+            document.getElementById('sGroup').innerHTML = options;
+        }
+
+        async function register() {
+            const name = document.getElementById('sName').value; 
+            const sPhone = document.getElementById('sPhone').value; 
+            const pPhone = document.getElementById('pPhone').value;
+            const group = document.getElementById('sGroup').value; 
+            const payMethod = document.getElementById('sPayMethod').value; 
+            const loc = document.getElementById('sLoc').value;
+            
+            if(!name || !sPhone || !group || !pPhone) { return alert("أكمل جميع بياناتك يا بطل!"); }
+            
+            const snap = await db.ref('teacher_app/students').orderByChild('sPhone').equalTo(sPhone).once('value');
+            if (snap.exists()) { return alert("رقم الهاتف هذا مسجل من قبل!"); }
+
+            const deviceToken = Math.random().toString(36).substring(2, 15); 
+            const newRef = db.ref('teacher_app/students').push(); 
+            const id = newRef.key;
+            const seatNumber = Math.floor(10000 + Math.random() * 90000);
+            
+            let monthsObj = {}; 
+            const monthNames = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+            monthNames.forEach((m, i) => { 
+                monthsObj[i] = { name: m, paid: false, exam: 0, sessions: Array(8).fill({ attended: false, score: 0, paid: false }) }; 
+            });
+
+            newRef.set({ 
+                id: id, name: name, sPhone: sPhone, pPhone: pPhone, location: loc, groupId: group, 
+                data: monthsObj, registeredDevice: deviceToken, materials: {book: false, notebook: false, notes: false}, 
+                seatNumber: seatNumber, paymentMethod: payMethod, banned: false 
+            }).then(() => { 
+                localStorage.setItem('alsaidi_student_id', id); 
+                localStorage.setItem('alsaidi_device_token', deviceToken); 
+                location.reload(); 
+            });
+        }
+
+        function checkDeviceAndShow(id) {
+            db.ref('teacher_app/students/' + id).on('value', snap => {
+                const s = snap.val(); 
+                if(!s) { localStorage.removeItem('alsaidi_student_id'); localStorage.removeItem('alsaidi_device_token'); showRegistrationForm(); return; }
+                
+                // ===== فحص إذا كان الطالب مطرود (محظور) =====
+                if(s.banned === true) {
+                    document.body.innerHTML = `
+                    <div class="card" style="margin-top:50px; border-top-color:#dc2626; text-align:center;">
+                        <h1 style="font-size:4rem; margin:0;">🚫</h1>
+                        <h2 style="color:#dc2626; font-family:'Changa';">حساب محظور!</h2>
+                        <p style="font-weight:bold; color:var(--text-main);">تم حظر هذا الحساب نهائياً من قِبل الإدارة. لا يمكنك الدخول للمنصة.</p>
+                    </div>`;
+                    return;
+                }
+                
+                const localToken = localStorage.getItem('alsaidi_device_token');
+                if (s.registeredDevice && s.registeredDevice !== localToken) { 
+                    document.body.innerHTML = "<div class='card' style='margin-top:50px;'><h2 style='color:#dc2626;'>⚠️ هذا الحساب مفعل على جهاز آخر!</h2><p style='text-align:center;'>لا يمكنك فتح الحساب من هاتفين مختلفين.</p></div>"; return; 
+                }
+                
+                currentUserData = s;
+                
+                db.ref('teacher_app/settings/materialsActive').on('value', settingsSnap => {
+                    const isMatActive = settingsSnap.val() || false; 
+                    document.getElementById('materialsCard').style.display = isMatActive ? 'block' : 'none'; 
+                    renderDashboard(s, id);
+                });
+            });
+            document.getElementById('rMonth').value = new Date().getMonth();
+        }
+
+        function renderDashboard(s, id) {
+            document.getElementById('studentDashboard').style.display = 'block'; 
+            document.getElementById('regForm').style.display = 'none';
+            document.getElementById('displayName').innerText = s.name; 
+            document.getElementById('seatNumVal').innerText = s.seatNumber;
+            document.getElementById('payMethodBadge').innerText = s.paymentMethod === 'session' ? '🎟️ نظام الدفع: بالحصة' : '📅 نظام الدفع: بالشهر';
+            
+            // الكيو ار كود اللي هيظهر للمستر في السنتر (خلفيته بيضا دايما عشان الكاميرا تقرأه صح)
+            let parentLink = window.location.href.replace('student.html', '') + 'parent.html?id=' + id;
+            document.getElementById('qrMain').innerHTML = ""; 
+            new QRCode(document.getElementById("qrMain"), {
+                text: parentLink, width: 180, height: 180, colorDark: "#134e4a", colorLight: "#ffffff"
+            });
+            
+            // إعدادات الستيكر للطباعة الذاتية
+            document.getElementById('stickerName').innerText = s.name; 
+            document.getElementById('stickerSeat').innerText = "رقم الجلوس: " + s.seatNumber;
+            document.getElementById('stickerQR').innerHTML = ""; 
+            new QRCode(document.getElementById("stickerQR"), {
+                text: parentLink, width: 150, height: 150, colorDark: "#000000", colorLight: "#ffffff"
+            });
+
+            // الأدوات
+            const mats = s.materials || {};
+            document.getElementById('stBook').innerText = mats.book ? '✅' : '❌'; 
+            document.getElementById('stNotebook').innerText = mats.notebook ? '✅' : '❌'; 
+            document.getElementById('stNotes').innerText = mats.notes ? '✅' : '❌';
+
+            // المستوى
+            let totalScore = 0; let attendedCount = 0;
+            for (let m in s.data) { 
+                s.data[m].sessions.forEach(sess => { if(sess.attended) { attendedCount++; totalScore += (sess.score || 0); } }); 
+            }
+            let levelText = "لم يبدأ بعد ⏳";
+            if (attendedCount > 0) {
+                let avg = totalScore / attendedCount;
+                if (avg >= 9) levelText = `امتياز 🔥 (${avg.toFixed(1)}/10)`; 
+                else if (avg >= 7) levelText = `جيد جداً ⭐ (${avg.toFixed(1)}/10)`;
+                else if (avg >= 5) levelText = `جيد 👍 (${avg.toFixed(1)}/10)`; 
+                else levelText = `محتاج مجهود 💪 (${avg.toFixed(1)}/10)`;
+            }
+            document.getElementById('levelBadge').innerText = `المستوى: ${levelText}`;
+
+            // مربعات الشهور
+            let gridHtml = '';
+            for (let i in s.data) { 
+                let badge = ''; 
+                if(s.paymentMethod === 'month') { badge = `<span class="paid-badge">${s.data[i].paid ? '✅' : '❌'}</span>`; }
+                gridHtml += `<div class="month-box" onclick="showMonthTable(${i})">${badge}<span class="month-name">${s.data[i].name}</span></div>`; 
+            }
+            document.getElementById('monthsGrid').innerHTML = gridHtml; 
+            window.currentStudentData = s.data;
+
+            // الرسائل
+            db.ref('teacher_app').once('value', snap => {
+                const data = snap.val() || {}; 
+                const studentYear = data.groups[s.groupId] ? data.groups[s.groupId].year : ""; 
+                let notifHtml = '';
+                for(let id in data.messages) { 
+                    let msg = data.messages[id]; 
+                    if(msg.year === studentYear || msg.year === "الكل") { 
+                        notifHtml += `
+                        <div class="notification-item">
+                            <b style="color:var(--primary-color);">📩 ${msg.title}</b><br>
+                            <span>${msg.body}</span>
+                        </div>`; 
+                    } 
+                }
+                document.getElementById('notificationsBox').innerHTML = notifHtml || '<p style="text-align:center; color:var(--text-muted); font-weight:bold;">لا توجد رسائل حالياً.</p>';
+            });
+        }
+
+        function showMonthTable(monthIdx) {
+            const monthData = window.currentStudentData[monthIdx]; 
+            let html = ''; 
+            const pMethod = currentUserData.paymentMethod || 'month';
+            
+            monthData.sessions.forEach((sess, i) => { 
+                let payStatus = pMethod === 'session' ? (sess.paid ? '✅' : '❌') : '-';
+                let rowBg = sess.attended ? 'background:rgba(34, 197, 94, 0.1);' : '';
+                html += `
+                <tr style="${rowBg}">
+                    <td>حصة ${i+1}</td>
+                    <td>${sess.attended ? '✅' : '❌'}</td>
+                    <td>${sess.score}/10</td>
+                    <td>${payStatus}</td>
+                </tr>`; 
+            });
+            document.getElementById('sessionsBody').innerHTML = html; 
+            document.getElementById('sessionsTable').style.display = 'table';
+            document.getElementById('examScoreValue').innerText = monthData.exam || 0; 
+            document.getElementById('examScoreBox').style.display = 'block';
+        }
+        
+        function printSticker() { 
+            document.getElementById('printStickerArea').style.display = 'flex'; 
+            window.print(); 
+            document.getElementById('printStickerArea').style.display = 'none'; 
+        }
+
+        // ===== الإبلاغ عن الدفع للواتساب =====
+        function notifyPayment() {
+            const monthIdx = document.getElementById('rMonth').value;
+            const btn = document.getElementById('btnNotify');
+
+            btn.innerText = "جاري إرسال الإشعار... ⏳";
+            btn.disabled = true;
+
+            // تسجيل الدفع كـ (معلق) في الداتا بيز من غير رفع صورة
+            db.ref('teacher_app/receipts').push({
+                sid: currentUserData.id,
+                sName: currentUserData.name,
+                monthIdx: monthIdx,
+                status: 'pending',
+                date: new Date().toLocaleDateString('ar-EG')
+            }).then(() => {
+                alert("عاش! تم إبلاغ المستر بنجاح. هيراجع الواتساب ويأكد الدفع في حسابك قريب جداً ✅");
+                document.getElementById('receiptModal').style.display = 'none';
+            }).catch(error => {
+                alert("حدث خطأ، يرجى التأكد من الإنترنت والمحاولة مرة أخرى.");
+            }).finally(() => {
+                btn.innerText = "أنا بعت السكرين على الواتساب 🚀";
+                btn.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>

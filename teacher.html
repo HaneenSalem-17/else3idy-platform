@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المستر | الصعيدي</title>
+    
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root { 
+            --primary-color: #0d1e2b; 
+            --secondary-color: #d4af37; 
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --heading-color: #d4af37; 
+            --input-bg: #334155;
+            --border-color: #475569;
+            --mat-theme: #a855f7;
+            --golden-metallic: radial-gradient(ellipse at center, #ffd700 0%, #d4af37 50%, #b8860b 100%);
+        }
+        
+        body { 
+            background-color: var(--primary-color); 
+            color: var(--text-main); 
+            font-family: 'Aref Ruqaa', sans-serif; 
+            margin: 0; 
+            padding-bottom: 50px; 
+            transition: background-color 0.3s, color 0.3s; 
+        }
+        
+        header { 
+            background-color: #0b1821; 
+            padding: 20px; 
+            text-align: center; 
+            border-bottom: 5px solid var(--secondary-color); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        .logo-img { 
+            width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--secondary-color); background-color: var(--primary-color); margin-bottom: 10px; object-fit: cover; box-shadow: 0 0 15px rgba(212, 175, 55, 0.6); 
+        }
+        
+        /* تأثير ذهبي معدني فخم للعنوان */
+        header h1 { 
+            margin: 0; 
+            font-size: 3rem; 
+            font-family: 'Aref Ruqaa', serif; 
+            font-weight: 700;
+            background: var(--golden-metallic);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+        
+        nav { 
+            display: flex; justify-content: center; flex-wrap: wrap; background: #141f27; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000; gap: 10px; border-radius: 0 0 15px 15px; width: 95%; margin: 0 auto; margin-top: -15px; 
+        }
+        nav button { 
+            background: rgba(255,255,255,0.05); border: 2px solid transparent; color: rgba(255,255,255,0.7); font-family: 'Cairo'; font-size: 1.1rem; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; 
+        }
+        nav button.active { 
+            background: rgba(212, 175, 55, 0.1); color: var(--secondary-color); border-color: var(--secondary-color); 
+        }
+        
+        .btn-camera { background: #10b981 !important; color: white !important; border-color: #059669 !important; }
+        .btn-logout { background: #fee2e2 !important; color: #dc2626 !important; border-color: #fca5a5 !important; }
+        
+        .container { max-width: 1200px; margin: 25px auto; padding: 15px; }
+        section { display: none; animation: fadeIn 0.4s; } 
+        section.active-section { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { 
+            background: var(--card-bg); padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); margin-bottom: 25px; border-top: 5px solid var(--secondary-color); transition: 0.3s;
+        }
+        
+        /* نفس خط العنوان الرئيسي للكروت */
+        .card h3, .banned-list h2 { 
+            color: var(--secondary-color); 
+            font-family: 'Aref Ruqaa', serif; 
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin: 0 0 15px 0;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        
+        select, input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea { 
+            width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-family: 'Cairo'; font-size: 1rem; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); transition: 0.3s; 
+        }
+        select:focus, input:focus { outline: none; border-color: var(--secondary-color); }
+        
+        .btn-add { 
+            background-color: var(--secondary-color); color: #0d1e2b; border: none; padding: 12px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; font-size: 1.1rem; transition: 0.3s; font-family: 'Cairo'; 
+        }
+        .btn-add:hover { background-color: #ffd700; }
+        
+        .search-bar { 
+            width: 100%; padding: 15px; border: 3px solid var(--secondary-color); border-radius: 10px; font-size: 1.1rem; font-family: 'Cairo'; margin-bottom: 20px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-main); text-align: right;
+        }
+        
+        .group-card { background: var(--card-bg); border-radius: 10px; margin-bottom: 15px; border-right: 6px solid var(--secondary-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border-color); }
+        .group-header { 
+            padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(20, 31, 39, 0.5); 
+        } 
+        .group-header div { display: flex; flex-direction: column; }
+        .group-header h4 { margin: 0; color: var(--text-main); font-size: 1.2rem; font-family: 'Cairo'; }
+        .group-header small { color: rgba(255,255,255,0.6); font-weight: bold; }
+        
+        .students-list { display: none; padding: 10px 15px 15px 15px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.2); } 
+        .group-card.open .students-list { display: block; }
+        .student-item { 
+            background: var(--input-bg); padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; 
+        } 
+        
+        .action-btns { display: flex; gap: 5px; margin-top: 5px; }
+        .btn-delete, .btn-edit, .btn-print-qr { border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-weight: bold; font-family: 'Cairo'; font-size: 0.85rem; }
+        .btn-delete { background: #fee2e2; color: #dc2626; }
+        .btn-edit { background: #e0f2fe; color: #0284c7; }
+        .btn-print-qr { background: #fef08a; color: #854d0e; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); } 
+        .modal-content { background: var(--card-bg); color: var(--text-main); width: 95%; max-width: 600px; border-radius: 15px; padding: 25px; position: relative; max-height: 90vh; overflow-y: auto; animation: modalPop 0.3s; border: 1px solid var(--secondary-color); } 
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        .score-input { width: 60px; text-align: center; padding: 8px; font-weight: bold; font-size: 1rem; border-radius: 6px; border: 2px solid var(--border-color); background: var(--input-bg); color: var(--text-main);} 
+        .check-input { width: 22px; height: 22px; cursor: pointer; accent-color: var(--secondary-color); }
+        .track-badge { font-size: 0.8rem; color: white; padding: 3px 8px; border-radius: 5px; display: inline-block; margin-top: 5px; font-weight: normal;}
+        .bg-ast { background: #475569; } 
+        .bg-pay { background: var(--secondary-color); color: #0d1e2b; font-weight: bold;}
+        
+        .report-box { padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 15px; font-weight: bold; } 
+        .treasury { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 2px solid #22c55e; font-size: 1.2rem; } 
+        .absence { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 2px solid #ef4444; } 
+        .unpaid { background: rgba(234, 179, 8, 0.1); color: #eab308; border: 2px solid #eab308; }
+        
+        table { width: 100%; border-collapse: collapse; text-align: center; font-family: 'Cairo'; } 
+        th, td { border: 1px solid var(--border-color); padding: 10px; vertical-align: middle; } 
+        th { background: rgba(0,0,0,0.3); color: var(--secondary-color); font-size: 1.1rem; }
+        
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; border: 3px solid var(--secondary-color); background: black; } 
+        #reader video { object-fit: cover; width: 100%; }
+        
+        .receipt-card { border: 2px dashed var(--secondary-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: center; background: rgba(212, 175, 55, 0.05); }
+
+        @media print {
+            body * { visibility: hidden; background: white !important; color: black !important; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 10px; }
+            .print-sticker { border: 1px solid #000; padding: 10px; text-align: center; border-radius: 5px; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 160px; }
+            .sticker-mark { width: 25px; height: 25px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; margin-bottom: 5px; font-family: 'Aref Ruqaa'; }
+            .print-sticker h3 { margin: 2px 0; font-size: 1.1rem; font-family: 'Cairo'; }
+            .print-sticker p { margin: 2px 0; font-size: 0.9rem; font-weight: bold; }
+            .qr-placeholder { margin-top: 5px; width: 90px; height: 90px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="printArea" class="no-print"></div>
+
+    <div id="loginScreen" class="container no-print" style="max-width: 400px; text-align: center; margin-top: 50px;">
+        <div class="card" style="border-top-color: var(--secondary-color);">
+            <img src="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg" style="width:120px; border-radius:50%; margin-bottom:15px; border:3px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212,175,55,0.4);">
+            <h2 style="color: var(--secondary-color); margin-top:0; font-family: 'Cairo';">🔒 تسجيل دخول الإدارة</h2>
+            <input type="password" id="adminPassword" placeholder="كلمة المرور..." style="text-align: center; margin-bottom: 15px; font-weight: bold; letter-spacing: 2px; font-size:1.2rem; padding:15px;">
+            <button class="btn-add" style="background: var(--secondary-color); color:#0d1e2b;" onclick="checkLogin()">دخول 🚀</button>
+        </div>
+    </div>
+
+    <div id="mainApp" class="no-print" style="display: none;">
+        <header>
+            <img src="https://i.ibb.co/WvpJkf50/f5d8874a-6022-4ab3-a58e-6fc92a9a80ae.jpg" class="logo-img">
+            <h1>مـنـصـة الصـعيـدي</h1>
+        </header>
+
+        <nav>
+            <button class="active" onclick="switchTab('main-groups', this)">الطلاب 👥</button>
+            <button onclick="switchTab('payments-view', this)">التحويلات 💸</button>
+            <button onclick="switchTab('assistants-view', this)">المساعدين 🕵️‍♂️</button>
+            <button onclick="switchTab('extra-classes', this)">إضافي ⏳</button>
+            <button onclick="switchTab('reports-view', this)">تقارير 📊</button>
+            <button onclick="switchTab('messages-view', this)">رسائل 📩</button>
+            <button onclick="switchTab('banned-view', this)" style="color: #dc2626; font-weight: 900;">البلاك ليست 🚫</button>
+            <button onclick="switchTab('schedule-view', this)">الجدول 📅</button>
+            <button class="btn-camera" onclick="openScanner()">الكاميرا 📸</button>
+            <button class="btn-logout" onclick="logout()">خروج 🚪</button>
+        </nav>
+
+        <div class="container">
+            <section id="main-groups" class="active-section">
+                <div class="card">
+                    <h3>➕ إضافة مجموعة جديدة</h3>
+                    <div class="form-grid">
+                        <select id="gYear">
+                            <option value="أولى إعدادي">أولى إعدادي</option><option value="تانية إعدادي">تانية إعدادي</option><option value="تالتة إعدادي">تالتة إعدادي</option><option value="أولى ثانوي">أولى ثانوي</option><option value="تانية ثانوي">تانية ثانوي</option><option value="تالتة ثانوي">تالتة ثانوي</option>
+                        </select>
+                        <select id="gType">
+                            <option value="عامة">عامة (سنتر)</option><option value="خاصة">خاصة (Private)</option>
+                        </select>
+                        <select id="gEduType">
+                            <option value="عام">تربية وتعليم (عام)</option><option value="أزهر">أزهر</option><option value="ميكس">ميكس (عام وأزهر)</option>
+                        </select>
+                        <select id="gDays">
+                            <option value="السبت والثلاثاء">السبت والثلاثاء</option><option value="الأحد والأربعاء">الأحد والأربعاء</option><option value="الإثنين والخميس">الإثنين والخميس</option>
+                        </select>
+                        <input type="time" id="gTime">
+                    </div>
+                    <button class="btn-add" onclick="addGroup()">إضافة المجموعة للجدول 🚀</button>
+                </div>
+                
+                <input type="text" id="searchInput" class="search-bar" placeholder="🔍 ابحث عن طالب بالاسم أو الرقم..." onkeyup="searchStudent()">
+                <div id="groupsContainer"></div>
+                
+                <div class="card" style="border-top-color: var(--mat-theme); background: rgba(168, 85, 247, 0.03);">
+                    <h3 style="color: var(--mat-theme);">📦 إدارة استلام الأدوات</h3>
+                    <button id="btnMaterialsToggle" class="btn-add" style="background:var(--mat-theme); color:white;" onclick="toggleMaterialsPhase()">جاري التحميل...</button>
+                </div>
+                
+                <div class="card" style="background-color: #1a1010; border-top-color: #dc2626;">
+                    <h3 style="color:#ef4444;">⚠️ منطقة الخطر</h3>
+                    <button class="btn-add" style="background:#dc2626; color:white;" onclick="clearAllStudents()">🗑️ تصفير كل بيانات الطلبة</button>
+                </div>
+            </section>
+            
+            <section id="banned-view">
+                <div class="card" style="background-color: #1a1010; border-top-color: #dc2626;">
+                    <h2 style="color: #ef4444; text-align:center;">الطلاب المحظورين (البلاك ليست) 🚫</h2>
+                    <p style="color:rgba(255,255,255,0.7); font-weight:bold; text-align:center;">الطلاب دول انطردوا من السيستم وميقدروش يدخلوا على حساباتهم، اتشالوا من المجموعات لحد ما تفك الحظر عنهم أو تمسحهم نهائي.</p>
+                    <div id="bannedListContainer"></div>
+                </div>
+            </section>
+            
+            <section id="payments-view">
+                <div class="card">
+                    <h2 style="color: var(--secondary-color); text-align:center;">مراجعة إشعارات الدفع (واتساب) 💸</h2>
+                    <p style="color:rgba(255,255,255,0.7); font-weight:bold; text-align:center;">الطلبة اللي تحت دول بلغوا السيستم إنهم بعتولك السكرين شوت على الواتساب، راجع الشات ودوس تأكيد.</p>
+                    <div id="receiptsContainer"></div>
+                </div>
+            </section>
+
+            <section id="assistants-view">
+                <div class="card">
+                    <h2 style="color:var(--secondary-color); text-align:center;">إدارة طاقم المساعدين 🕵️‍♂️</h2>
+                    <div class="form-grid">
+                        <input type="text" id="astName" placeholder="اسم المساعد (مثال: مستر أحمد)">
+                        <input type="number" id="astPin" placeholder="كود الدخول السري (أرقام)">
+                        <input type="number" id="astPhone" placeholder="رقم الموبايل">
+                    </div>
+                    <button class="btn-add" style="background:var(--card-bg); color:var(--secondary-color); border:1px solid var(--secondary-color);" onclick="addAssistant()">إضافة مساعد للسيستم ✅</button>
+                </div>
+                <div class="card">
+                    <h3 style="color:var(--text-main);">الطاقم الحالي</h3>
+                    <div id="assistantsList"></div>
+                </div>
+            </section>
+
+            <section id="extra-classes">
+                <div class="card">
+                    <h3>⏳ حجز حصه إضافية</h3>
+                    <div class="form-grid">
+                        <input type="text" id="exName" placeholder="عنوان الحصة">
+                        <select id="exGroup"><option value="">👥 تبع سنة إيه؟</option></select>
+                        <select id="exEduType">
+                            <option value="عام">تربية وتعليم (عام)</option><option value="أزهر">أزهر</option><option value="ميكس">ميكس (عام وأزهر)</option>
+                        </select>
+                        <input type="date" id="exDate">
+                        <input type="time" id="exTime">
+                    </div>
+                    <button class="btn-add" onclick="addExtra()">تثبيت الحصة 📌</button>
+                </div>
+                <div id="extraContainer"></div>
+            </section>
+            
+            <section id="reports-view">
+                <div class="card">
+                    <h2 style="color:var(--secondary-color); text-align:center;">إحصائيات الشهر 📊</h2>
+                    <div class="report-box treasury" id="treasuryStats">جاري حساب الخزنة... 💰</div>
+                    <div class="report-box unpaid">
+                        <h3 style="color: #eab308;">⚠️ متأخرات الدفع</h3>
+                        <div id="unpaidList" style="text-align:right; font-size:1rem; font-weight:normal; color:rgba(255,255,255,0.7);"></div>
+                    </div>
+                    <div class="report-box absence">
+                        <h3 style="color: #ef4444;">🚨 إنذار الغياب (3 حصص فأكثر)</h3>
+                        <div id="absenceList" style="text-align:right; font-size:1rem; font-weight:normal; color:rgba(255,255,255,0.7);"></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="messages-view">
+                <div class="card">
+                    <h3>📩 إرسال واجب أو إعلان</h3>
+                    <div class="form-grid">
+                        <select id="msgYear">
+                            <option value="الكل">الكل (إعلان عام)</option>
+                            <option value="أولى إعدادي">أولى إعدادي</option><option value="تانية إعدادي">تانية إعدادي</option><option value="تالتة إعدادي">تالتة إعدادي</option><option value="أولى ثانوي">أولى ثانوي</option><option value="تانية ثانوي">تانية ثانوي</option><option value="تالتة ثانوي">تالتة ثانوي</option>
+                        </select>
+                        <input type="text" id="msgTitle" placeholder="عنوان الرسالة (مثال: واجب الجبر)">
+                    </div>
+                    <textarea id="msgBody" rows="4" placeholder="اكتب تفاصيل الواجب هنا..." style="margin-bottom: 15px;"></textarea>
+                    <button class="btn-add" onclick="sendMessage()">إرسال الرسالة للطلاب 🚀</button>
+                </div>
+            </section>
+
+            <section id="schedule-view">
+                <div class="card" style="overflow-x: auto;">
+                    <h2 style="text-align:center; color:var(--secondary-color);">📅 الجدول الأسبوعي للسنتر</h2>
+                    <table style="min-width: 800px;">
+                        <thead>
+                            <tr><th>الساعة</th><th>السبت</th><th>الأحد</th><th>الإثنين</th><th>الثلاثاء</th><th>الأربعاء</th><th>الخميس</th><th>الجمعة</th></tr>
+                        </thead>
+                        <tbody id="scheduleBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="modal" id="scannerModal">
+        <div class="modal-content" style="text-align: center; max-width: 400px; border-top: 5px solid var(--secondary-color);">
+            <h2 style="color:var(--secondary-color); margin-top:0; font-family:'Aref Ruqaa';">📸 الكاميرا الذكية</h2>
+            <div id="reader"></div>
+            <button class="btn-add" style="background:#dc2626; color:white; margin-top:15px;" onclick="closeScanner()">إغلاق الكاميرا ❌</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="universalModal">
+        <div class="modal-content" style="text-align: center; max-width: 350px; border-top: 5px solid var(--secondary-color);">
+            <h3 id="uniStudentName" style="color:var(--text-main); font-size:1.6rem; font-family:'Aref Ruqaa';">اسم الطالب</h3>
+            <button class="btn-add" style="background:#16a34a; color:white;" onclick="quickPay()">💰 تسجيل دفع الشهر</button>
+            <button class="btn-add" style="background:var(--mat-theme); color:white;" onclick="quickMaterials()">📦 تسليم أدوات</button>
+            <button class="btn-add" style="background:#141f27; color:var(--secondary-color); border:1px solid var(--secondary-color);" onclick="quickProfile()">📝 فتح الملف الكامل</button>
+            <button class="btn-add" style="background:#475569; color:white;" onclick="document.getElementById('universalModal').style.display='none'">إغلاق ❌</button>
+        </div>
+    </div>
+
+    <div class="modal" id="materialsModal">
+        <div class="modal-content" style="max-width: 350px; text-align: center; border-top: 5px solid var(--mat-theme);">
+            <h2 style="color:var(--mat-theme); margin-top:0; font-family:'Aref Ruqaa';">📚 تسليم أدوات</h2>
+            <h3 id="matStudentName"></h3>
+            <div style="text-align:right; background:rgba(255,255,255,0.02); padding:20px; border-radius:10px; font-size:1.2rem; border:1px solid rgba(255,255,255,0.05);">
+                <label style="display:block; margin-bottom:15px;"><input type="checkbox" id="chkBook" class="check-input"> 📖 استلام الكتاب</label>
+                <label style="display:block; margin-bottom:15px;"><input type="checkbox" id="chkNotebook" class="check-input"> 📓 استلام الكراسة</label>
+                <label style="display:block;"><input type="checkbox" id="chkNotes" class="check-input"> 📝 استلام المذكرة</label>
+            </div>
+            <button class="btn-add" style="background:var(--mat-theme); color:white;" onclick="saveMaterials()">حفظ التسليم ✅</button>
+            <button class="btn-add" style="background:#475569; color:white;" onclick="closeMaterialsModal()">إغلاق ❌</button>
+        </div>
+    </div>
+
+    <div class="modal" id="studentModal">
+        <div class="modal-content" style="border-top: 5px solid var(--secondary-color);">
+            <h2 id="mName" style="margin:0;"></h2>
+            <p id="mInfo" style="font-size:1rem; color:rgba(255,255,255,0.6); font-weight:bold;"></p>
+            <hr style="border-color: rgba(255,255,255,0.05); margin: 10px 0;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <select id="mMonthSelect" style="width:60%; padding:10px; font-weight:bold;" onchange="changeViewedMonth()"></select>
+                <button id="mPaidBtn" style="padding:10px 15px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; font-family:'Cairo';"></button>
+            </div>
+            
+            <div style="background:rgba(212, 175, 55, 0.05); padding:15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:2px dashed rgba(212, 175, 55, 0.2);">
+                <b style="color:var(--text-main); font-size:1.1rem;">الامتحان الشامل:</b>
+                <input type="number" id="mExamScore" class="score-input" style="border-color:var(--secondary-color);">
+            </div>
+            
+            <table style="width:100%; margin-top:20px;">
+                <thead>
+                    <tr><th>حصة</th><th>حضور</th><th>واجب</th><th>دفع</th></tr>
+                </thead>
+                <tbody id="mSessionsBody"></tbody>
+            </table>
+            
+            <button class="btn-add" onclick="saveStudentChanges()">حفظ التعديلات ✅</button>
+            <button class="btn-add" style="background:#475569; color:white;" onclick="closeModal()">إغلاق ❌</button>
+            
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn-add" style="background:#dc2626; color:white; border:2px dashed #991b1b; margin-top:0;" onclick="banStudent()">🚫 حظر الطالب</button>
+                <button class="btn-add" style="background:#7f1d1d; color:white; border:none; margin-top:0;" onclick="deleteStudent()">🗑️ مسح نهائي</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-Xmz7v1ZbnTjuXpCXAxPb8pEMiQ83zYY",
+            authDomain: "els3idy-system.firebaseapp.com",
+            databaseURL: "https://els3idy-system-default-rtdb.firebaseio.com",
+            projectId: "els3idy-system",
+            storageBucket: "els3idy-system.firebasestorage.app",
+            messagingSenderId: "494888700490",
+            appId: "1:494888700490:web:35e98bcd8e9c69ec2774b3"
+        };
+        
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+        
+        const ADMIN_PASSWORD = "Ahmed2026";
+        let allDataForTable = {}; 
+        let isMaterialsActive = false;
+        const monthNames = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+        let currentRealMonth = new Date().getMonth(); 
+        let viewedMonth = currentRealMonth; 
+        let editSid = null; let matSid = null; let currentStudentDataCache = null; let scannedSid = null;
+
+        if (localStorage.getItem('alsaidi_admin_auth') === 'true') { 
+            document.getElementById('loginScreen').style.display = 'none'; 
+            document.getElementById('mainApp').style.display = 'block'; 
+            initApp(); 
+        }
+        
+        function checkLogin() { 
+            if (document.getElementById('adminPassword').value === ADMIN_PASSWORD) { 
+                localStorage.setItem('alsaidi_admin_auth', 'true'); 
+                location.reload(); 
+            } else { alert("كلمة المرور خاطئة! ❌"); } 
+        }
+        
+        function logout() { 
+            if(confirm("هل تريد تسجيل الخروج؟")) { localStorage.removeItem('alsaidi_admin_auth'); location.reload(); } 
+        }
+        
+        function switchTab(id, btn) { 
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active-section')); 
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active')); 
+            document.getElementById(id).classList.add('active-section'); 
+            if(btn) btn.classList.add('active'); 
+        }
+
+        function initApp() {
+            db.ref('teacher_app/settings/materialsActive').on('value', snap => {
+                isMaterialsActive = snap.val() || false; 
+                const btn = document.getElementById('btnMaterialsToggle');
+                if(btn) { 
+                    btn.innerText = isMaterialsActive ? "إيقاف استلام الأدوات 🛑" : "تفعيل استلام الأدوات 📚"; 
+                    btn.style.background = isMaterialsActive ? "#dc2626" : "var(--mat-theme)"; 
+                    btn.style.color = "white";
+                }
+            }); 
+            fetchData();
+        }
+
+        let html5QrCode;
+        function openScanner() { 
+            document.getElementById('scannerModal').style.display = 'flex'; 
+            html5QrCode = new Html5Qrcode("reader"); 
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: {width: 250, height: 250} }, 
+                (text) => { closeScanner(); processUniversalCode(text); }, 
+                (err) => {}
+            ).catch(e => { alert("برجاء السماح للكاميرا بالعمل!"); closeScanner(); }); 
+        }
+        
+        function closeScanner() { 
+            document.getElementById('scannerModal').style.display = 'none'; 
+            if (html5QrCode) { 
+                try { html5QrCode.stop().then(() => { html5QrCode.clear(); }).catch(e => console.log("Camera stopped")); } catch(err){}
+            } 
+        }
+        
+        function processUniversalCode(text) { 
+            let sid = text.includes("?id=") ? text.split("?id=")[1] : text; 
+            db.ref('teacher_app/students/' + sid).once('value', snap => { 
+                if(snap.exists()){ 
+                    let s = snap.val();
+                    if(s.banned === true) { alert("الطالب ده محظور (مطرود) من السيستم! 🚫"); return; }
+                    scannedSid = sid; 
+                    document.getElementById('uniStudentName').innerText = s.name; 
+                    document.getElementById('universalModal').style.display = 'flex'; 
+                } else { alert("هذا الكود غير مسجل بالسيستم!"); }
+            }); 
+        }
+        
+        function quickPay() { 
+            document.getElementById('universalModal').style.display = 'none'; 
+            db.ref('teacher_app/students/' + scannedSid).once('value', snap => { 
+                let s = snap.val(); 
+                if(s.paymentMethod === 'session') return alert("هذا الطالب نظامه الدفع بالحصة، افتح ملفه لتسجيل حصصه!"); 
+                if(s.data[currentRealMonth].paid) return alert("هذا الطالب قام بدفع مصاريف الشهر الحالي مسبقاً!"); 
+                if(confirm(`هل أنت متأكد من دفع شهر ${monthNames[currentRealMonth]} للطالب ${s.name}؟`)) { 
+                    db.ref(`teacher_app/students/${scannedSid}/data/${currentRealMonth}/paid`).set(true).then(() => { alert("تم تسجيل الدفع بنجاح! ✅"); }); 
+                } 
+            }); 
+        }
+        
+        function quickMaterials() { document.getElementById('universalModal').style.display = 'none'; openMaterialsModal(scannedSid); }
+        function quickProfile() { document.getElementById('universalModal').style.display = 'none'; openStudentModal(scannedSid); }
+
+        function toggleMaterialsPhase() { db.ref('teacher_app/settings/materialsActive').set(!isMaterialsActive); }
+        function openMaterialsModal(sid) { 
+            matSid = sid; 
+            db.ref('teacher_app/students/'+sid).once('value', snap => { 
+                let s = snap.val(); 
+                document.getElementById('matStudentName').innerText = s.name; 
+                let mats = s.materials || {}; 
+                document.getElementById('chkBook').checked = mats.book || false; 
+                document.getElementById('chkNotebook').checked = mats.notebook || false; 
+                document.getElementById('chkNotes').checked = mats.notes || false; 
+                document.getElementById('materialsModal').style.display = 'flex'; 
+            }); 
+        }
+        function closeMaterialsModal() { document.getElementById('materialsModal').style.display = 'none'; }
+        function saveMaterials() { 
+            db.ref(`teacher_app/students/${matSid}/materials`).set({ 
+                book: document.getElementById('chkBook').checked, 
+                notebook: document.getElementById('chkNotebook').checked, 
+                notes: document.getElementById('chkNotes').checked 
+            }).then(() => { alert("تم حفظ استلام الأدوات بنجاح! ✅"); closeMaterialsModal(); }); 
+        }
+
+        function toggleGroup(id) { document.getElementById('group-' + id).classList.toggle('open'); }
+        function searchStudent() { 
+            let input = document.getElementById('searchInput').value.toLowerCase(); 
+            document.querySelectorAll('.group-card').forEach(c => c.classList.add('open')); 
+            document.querySelectorAll('.student-item').forEach(i => {
+                i.style.display = i.innerText.toLowerCase().includes(input) ? 'flex' : 'none';
+            }); 
+            if(!input) { document.querySelectorAll('.group-card').forEach(c => c.classList.remove('open')); }
+        }
+        
+        function addGroup() { 
+            let year = document.getElementById('gYear').value; 
+            let days = document.getElementById('gDays').value; 
+            let rawTime = document.getElementById('gTime').value; 
+            let type = document.getElementById('gType').value; 
+            let eduType = document.getElementById('gEduType').value; 
+
+            if(!rawTime) return alert('برجاء اختيار وقت المجموعة!'); 
+            
+            let [h,m] = rawTime.split(':'); 
+            h = parseInt(h); 
+            let time = (h % 12 || 12) + ':' + m + (h >= 12 ? ' م' : ' ص'); 
+            
+            db.ref('teacher_app/groups').push({
+                year, days, rawTime, time, type, eduType,
+                displayName: `${year} (${type} - ${eduType}) - ${days}`
+            }).then(() => alert("تم إضافة المجموعة بنجاح! ✅")); 
+        }
+
+        window.editGroupTime = function(id) {
+            let newDays = prompt("اكتب الأيام الجديدة (مثال: السبت والثلاثاء):", allDataForTable[id].days);
+            let newTime = prompt("اكتب الميعاد الجديد كساعة ودقيقة (مثال: 04:00 م أو 16:00):", allDataForTable[id].time);
+            
+            if(newDays && newTime) {
+                db.ref(`teacher_app/groups/${id}`).update({
+                    days: newDays, time: newTime,
+                    displayName: `${allDataForTable[id].year} (${allDataForTable[id].type} - ${allDataForTable[id].eduType}) - ${newDays}`
+                }).then(() => alert("تم تعديل ميعاد المجموعة بنجاح! ✅"));
+            }
+        }
+        
+        function clearAllStudents() { 
+            if(prompt("تحذير: هذا الخيار سيمسح كل الطلاب! أدخل كلمة السر للتأكيد:") === "12345" && confirm("هل أنت متأكد نهائياً؟")) {
+                db.ref('teacher_app/students').remove().then(() => alert("تم تصفير جميع البيانات بنجاح!")); 
+            }
+        }
+
+        function addAssistant() {
+            let name = document.getElementById('astName').value; 
+            let pin = document.getElementById('astPin').value; 
+            let phone = document.getElementById('astPhone').value;
+            if(!name || !pin) return alert("يجب كتابة اسم المساعد والكود السري!");
+            db.ref('teacher_app/assistants').push({ name, pin, phone }).then(() => { 
+                alert("تم إضافة المساعد للسيستم بنجاح! ✅"); 
+                document.getElementById('astName').value = ''; 
+                document.getElementById('astPin').value = ''; 
+                document.getElementById('astPhone').value = ''; 
+            });
+        }
+        
+        function sendMessage() {
+            let year = document.getElementById('msgYear').value;
+            let title = document.getElementById('msgTitle').value;
+            let body = document.getElementById('msgBody').value;
+            
+            if(!title || !body) return alert("يجب كتابة عنوان وتفاصيل الرسالة!");
+            
+            db.ref('teacher_app/messages').push({
+                year: year, title: title, body: body, date: new Date().toLocaleDateString('ar-EG')
+            }).then(() => {
+                alert("تم إرسال الرسالة للطلاب بنجاح! 📩");
+                document.getElementById('msgTitle').value = ''; document.getElementById('msgBody').value = '';
+            });
+        }
+
+        window.printGroupQRs = function(groupId) {
+            let printContainer = document.getElementById('printArea');
+            printContainer.innerHTML = '<h3 style="text-align:center;">جاري تجهيز الستيكرات... ⏳</h3>';
+            document.getElementById('printArea').classList.remove('no-print');
+            
+            db.ref('teacher_app/students').orderByChild('groupId').equalTo(groupId).once('value', snap => {
+                if(!snap.exists()) {
+                    alert("المجموعة دي مفهاش طلبة متسجلين لسه!");
+                    document.getElementById('printArea').classList.add('no-print');
+                    return;
+                }
+
+                let html = '';
+                let qrData = [];
+
+                snap.forEach(child => {
+                    let s = child.val();
+                    if(s.banned) return; 
+                    let sid = child.key;
+                    let parentLink = 'parent.html?id=' + sid;
+
+                    html += `
+                    <div class="print-sticker">
+                        <div class="sticker-mark">ص</div>
+                        <h3>${s.name}</h3>
+                        <p>جلوس: ${s.seatNumber}</p>
+                        <div id="qr_${sid}" class="qr-placeholder"></div>
+                    </div>`;
+
+                    qrData.push({ id: `qr_${sid}`, text: parentLink });
+                });
+
+                printContainer.innerHTML = html;
+
+                qrData.forEach(item => {
+                    new QRCode(document.getElementById(item.id), {
+                        text: item.text, width: 90, height: 90, colorDark: "#000000", colorLight: "#ffffff"
+                    });
+                });
+
+                setTimeout(() => {
+                    window.print();
+                    document.getElementById('printArea').classList.add('no-print');
+                    document.getElementById('printArea').innerHTML = ''; 
+                }, 800);
+            });
+        }
+
+        function fetchData() {
+            db.ref('teacher_app').on('value', snap => {
+                const data = snap.val() || {}; 
+                const groups = data.groups || {}; 
+                const students = data.students || {}; 
+                const extras = data.extra_classes || {}; 
+                const receipts = data.receipts || {}; 
+                const assistants = data.assistants || {};
+                
+                allDataForTable = {}; 
+                let gHtml = ''; 
+                let bannedHtml = '';
+                let tStudents = 0; 
+                let pStudents = 0; 
+                let uHtml = ''; 
+                let aHtml = ''; 
+                let opt = '<option value="">👥 تبع سنة إيه؟</option>'; 
+                let uYears = new Set();
+
+                for (let id in groups) {
+                    allDataForTable[id] = groups[id]; 
+                    uYears.add(groups[id].year); 
+                    let sList = '';
+                    
+                    for(let sid in students) {
+                        if(students[sid].groupId === id) {
+                            if(students[sid].banned === true) {
+                                bannedHtml += `
+                                <div class="student-item" style="border-right: 4px solid #dc2626;">
+                                    <span>🚫 ${students[sid].name} <small style="color:var(--text-muted);">(${groups[id].displayName})</small></span>
+                                    <div>
+                                        <button class="btn-add" style="background:#16a34a; color:white; width:auto; padding:5px 10px; margin:0;" onclick="unbanStudent('${sid}')">سماح وإرجاع ✅</button>
+                                        <button class="btn-delete" style="margin:0; padding:5px 10px;" onclick="deleteBannedStudent('${sid}')">مسح نهائي 🗑️</button>
+                                    </div>
+                                </div>`;
+                                continue; 
+                            }
+
+                            tStudents++; 
+                            let sData = students[sid].data[currentRealMonth]; 
+                            let pMethod = students[sid].paymentMethod || 'month';
+                            
+                            if(pMethod === 'month') { 
+                                if(sData.paid) { pStudents++; } 
+                                else { uHtml += `<div style="border-bottom:1px solid var(--border-color); padding:8px 0;">👤 ${students[sid].name} - 📞 ${students[sid].pPhone}</div>`; } 
+                            }
+                            
+                            let abCount = 0; 
+                            sData.sessions.forEach(ss => { if(!ss.attended && ss.score === 0) abCount++; });
+                            if(abCount >= 3) { aHtml += `<div style="border-bottom:1px solid var(--border-color); padding:8px 0;">👤 ${students[sid].name} - 📞 ${students[sid].pPhone}</div>`; }
+                            
+                            let badge = pMethod === 'session' ? '🎟️ حصة' : (sData.paid ? '✅' : '❌');
+                            sList += `<div class="student-item" onclick="openStudentModal('${sid}')"><span>👤 ${students[sid].name}</span> <span>${badge}</span></div>`;
+                        }
+                    }
+                    
+                    gHtml += `
+                    <div class="group-card" id="group-${id}">
+                        <div class="group-header" onclick="toggleGroup('${id}')">
+                            <div>
+                                <h4>${groups[id].displayName}</h4>
+                                <small>${groups[id].time}</small>
+                            </div>
+                            <div class="action-btns">
+                                <button class="btn-print-qr" onclick="event.stopPropagation(); printGroupQRs('${id}')">ستيكرات 🖨️</button>
+                                <button class="btn-edit" onclick="event.stopPropagation(); editGroupTime('${id}')">✏️</button>
+                                <button class="btn-delete" onclick="event.stopPropagation(); db.ref('teacher_app/groups/${id}').remove()">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="students-list">${sList || '<p style="text-align:center; color:var(--text-muted);">لا يوجد طلاب.</p>'}</div>
+                    </div>`;
+                }
+                
+                document.getElementById('groupsContainer').innerHTML = gHtml || '<p style="text-align:center; font-weight:bold;">لا يوجد مجموعات حالياً.</p>';
+                
+                document.getElementById('bannedListContainer').innerHTML = bannedHtml || '<p style="text-align:center; font-weight:bold; color:#16a34a; padding:15px; background:var(--card-bg); border-radius:10px;">لا يوجد طلاب في البلاك ليست حالياً 😇</p>';
+
+                uYears.forEach(y => opt += `<option value="${y}">${y}</option>`); 
+                document.getElementById('exGroup').innerHTML = opt;
+                
+                document.getElementById('treasuryStats').innerHTML = `💰 خزنة شهر ${monthNames[currentRealMonth]}: تم تحصيل المصاريف من ${pStudents} طالباً من أصل ${tStudents}`;
+                document.getElementById('unpaidList').innerHTML = uHtml || '<p style="color:#16a34a;">الكل مسدد مصاريفه، عاش! ✅</p>'; 
+                document.getElementById('absenceList').innerHTML = aHtml || '<p style="color:#16a34a;">لا يوجد طلاب تعدوا نسبة الغياب المتكرر ✅</p>';
+
+                let astHtml = ''; 
+                for(let id in assistants) { 
+                    astHtml += `
+                    <div class="student-item">
+                        <span>🕵️‍♂️ ${assistants[id].name} <small style="color:var(--mat-theme); font-weight:bold;">(كود: ${assistants[id].pin})</small></span>
+                        <button class="btn-delete" onclick="db.ref('teacher_app/assistants/${id}').remove()">حذف</button>
+                    </div>`; 
+                }
+                document.getElementById('assistantsList').innerHTML = astHtml || '<p style="text-align:center;">لم يتم إضافة مساعدين بعد.</p>';
+
+                let recHtml = ''; 
+                for(let rid in receipts) { 
+                    let r = receipts[rid]; 
+                    if(r.status === 'pending') { 
+                        recHtml += `
+                        <div class="receipt-card">
+                            <h3 style="margin:0;">👤 ${r.sName}</h3>
+                            <p style="color:var(--text-muted); font-weight:bold;">بعت السكرين على الواتساب ✅</p>
+                            <p>يطلب تأكيد دفع شهر: <b>${monthNames[r.monthIdx]}</b></p>
+                            <button class="btn-add" style="background:#16a34a; color:white; width:48%; display:inline-block;" onclick="approveReceipt('${rid}', '${r.sid}', ${r.monthIdx})">تأكيد ✅</button> 
+                            <button class="btn-add" style="background:#dc2626; color:white; width:48%; display:inline-block;" onclick="db.ref('teacher_app/receipts/${rid}').update({status:'rejected'})">إلغاء ❌</button>
+                        </div>`; 
+                    } 
+                }
+                document.getElementById('receiptsContainer').innerHTML = recHtml || '<p style="text-align:center; font-weight:bold; color:#16a34a;">كله متراجع ومفيش إشعارات دفع معلقة ✅</p>';
+
+                let today = new Date().toISOString().split('T')[0];
+                for(let id in extras) { 
+                    if(extras[id].date < today) { db.ref('teacher_app/extra_classes/'+id).remove(); } 
+                    else { allDataForTable[id] = extras[id]; }
+                }
+                renderBigSchedule();
+            });
+        }
+
+        window.approveReceipt = function(rid, sid, mIdx) { 
+            if(confirm('هل راجعت الواتساب وتأكدت من السكرين شوت؟')) { 
+                db.ref(`teacher_app/students/${sid}/data/${mIdx}/paid`).set(true); 
+                db.ref(`teacher_app/receipts/${rid}`).update({status: 'approved'}).then(() => { alert('تم تأكيد الدفع وتسجيله للطالب بنجاح! ✅💰'); }); 
+            } 
+        }
+
+        function addExtra() { 
+            let n = document.getElementById('exName').value;
+            let d = document.getElementById('exDate').value;
+            let rt = document.getElementById('exTime').value;
+            let gy = document.getElementById('exGroup').value; 
+            let eduType = document.getElementById('exEduType').value; 
+            
+            if(!n || !d || !rt || !gy) return alert("برجاء إكمال جميع بيانات الحصة الإضافية!"); 
+            
+            let [h,m] = rt.split(':'); 
+            h = parseInt(h); 
+            let t = (h % 12 || 12) + ':' + m + (h >= 12 ? ' م' : ' ص'); 
+            const dayAr = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]; 
+            let dName = dayAr[new Date(d).getDay()]; 
+            
+            db.ref('teacher_app/extra_classes').push({
+                name: n + ` (${gy})`, date: d, days: dName, time: t, rawTime: rt, isExtra: true, eduType: eduType 
+            }).then(() => { alert("تم حجز الحصة الإضافية بالجدول بنجاح! 📌"); }); 
+        }
+        
+        function renderBigSchedule() { 
+            const dArr = ["السبت","الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة"]; 
+            const hArr = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00"]; 
+            let ht = ''; 
+            
+            hArr.forEach(hr => { 
+                let gH = parseInt(hr.split(':')[0]); 
+                ht += `<tr><td style="background:rgba(0,0,0,0.3); color:white; font-weight:bold;">${(gH % 12 || 12) + (gH >= 12 ? ' م' : ' ص')}</td>`; 
+                
+                dArr.forEach(d => { 
+                    let ci = ''; 
+                    for(let id in allDataForTable) { 
+                        let item = allDataForTable[id]; 
+                        if((item.days || "").includes(d) && parseInt(item.rawTime.split(':')[0]) === gH) {
+                            let typeLabel = item.isExtra ? 'حصة إضافية' : (item.type || 'عامة');
+                            ci += `<div style="font-size:0.9rem; background:${item.isExtra ? 'rgba(212, 175, 55, 0.1)' : 'rgba(34, 197, 94, 0.1)'}; border: 1px solid ${item.isExtra ? '#d4af37' : '#22c55e'}; margin:4px 0; padding:6px; border-radius:6px; font-weight:bold; color:var(--text-main); line-height: 1.4;">${item.year || item.name} <br><small style="color:rgba(255,255,255,0.6);">${typeLabel}</small></div>`; 
+                        }
+                    } 
+                    ht += `<td>${ci}</td>`; 
+                }); 
+                ht += '</tr>'; 
+            }); 
+            document.getElementById('scheduleBody').innerHTML = ht; 
+        }
+
+        window.openStudentModal = function(sid) { 
+            editSid = sid; 
+            viewedMonth = currentRealMonth; 
+            db.ref('teacher_app/students/'+sid).once('value', snap => { 
+                currentStudentDataCache = snap.val(); 
+                document.getElementById('mName').innerText = currentStudentDataCache.name; 
+                document.getElementById('mInfo').innerText = currentStudentDataCache.sPhone + ' | نظام الدفع: ' + (currentStudentDataCache.paymentMethod === 'session' ? 'بالحصة 🎟️' : 'بالشهر 📅'); 
+                
+                let mo = ''; 
+                monthNames.forEach((m,i) => { mo += `<option value="${i}" ${i === viewedMonth ? 'selected' : ''}>متابعة شهر: ${m}</option>`; }); 
+                document.getElementById('mMonthSelect').innerHTML = mo; 
+                
+                renderStudentModalData(); 
+                document.getElementById('studentModal').style.display = 'flex'; 
+            }); 
+        }
+        
+        window.changeViewedMonth = function() { 
+            viewedMonth = parseInt(document.getElementById('mMonthSelect').value); 
+            renderStudentModalData(); 
+        }
+
+        function renderStudentModalData() {
+            const s = currentStudentDataCache; 
+            const pM = s.paymentMethod || 'month'; 
+            const b = document.getElementById('mPaidBtn');
+            
+            if(pM === 'session') { 
+                b.innerText = "الدفع بالحصة 🎟️"; b.style.background = "#334155"; b.style.color = "rgba(255,255,255,0.6)"; b.disabled = true; 
+            } else { 
+                let isP = s.data[viewedMonth].paid; 
+                b.innerText = isP ? "تم دفع الشهر ✅" : "تعليم كمدفوع 💰"; 
+                b.style.background = isP ? "#16a34a" : "#dc2626"; b.style.color = "white"; b.disabled = false; 
+                b.onclick = () => { db.ref(`teacher_app/students/${editSid}/data/${viewedMonth}/paid`).set(!isP).then(() => { currentStudentDataCache.data[viewedMonth].paid = !isP; renderStudentModalData(); }); } 
+            }
+            
+            document.getElementById('mExamScore').value = s.data[viewedMonth].exam || 0;
+            
+            let h = ''; 
+            s.data[viewedMonth].sessions.forEach((ss, i) => { 
+                let pCol = pM === 'session' ? `<input type="checkbox" class="check-input" id="hpaid_${i}" ${ss.paid ? 'checked' : ''}>` : '-'; 
+                let astAtt = ss.attendedBy ? `<br><span class="track-badge bg-ast">بواسطة: ${ss.attendedBy}</span>` : '';
+                let astPay = ss.paidBy ? `<br><span class="track-badge bg-pay">حصله: ${ss.paidBy}</span>` : '';
+                
+                h += `<tr><td style="font-weight:bold; font-size:1.1rem;">${i+1}</td><td><input type="checkbox" class="check-input" id="hatt_${i}" ${ss.attended ? 'checked' : ''}>${astAtt}</td><td><input type="number" class="score-input" id="hscore_${i}" value="${ss.score || 0}"></td><td>${pCol}${astPay}</td></tr>`; 
+            }); 
+            document.getElementById('mSessionsBody').innerHTML = h;
+        }
+
+        window.saveStudentChanges = function() {
+            let ns = []; 
+            const pM = currentStudentDataCache.paymentMethod || 'month';
+            
+            for(let i=0; i<8; i++) { 
+                let wasAtt = currentStudentDataCache.data[viewedMonth].sessions[i].attended;
+                let wasPaid = currentStudentDataCache.data[viewedMonth].sessions[i].paid;
+                let nowAtt = document.getElementById('hatt_'+i).checked;
+                let nowPaid = pM === 'session' ? document.getElementById('hpaid_'+i).checked : false;
+                
+                let attBy = currentStudentDataCache.data[viewedMonth].sessions[i].attendedBy || (nowAtt && !wasAtt ? "الإدارة 👨‍🏫" : "");
+                let payBy = currentStudentDataCache.data[viewedMonth].sessions[i].paidBy || (nowPaid && !wasPaid ? "الإدارة 👨‍🏫" : "");
+                
+                if(!nowAtt) attBy = ""; if(!nowPaid) payBy = ""; 
+
+                ns.push({ attended: nowAtt, score: parseInt(document.getElementById('hscore_'+i).value) || 0, paid: nowPaid, attendedBy: attBy, paidBy: payBy }); 
+            }
+            
+            db.ref(`teacher_app/students/${editSid}/data/${viewedMonth}/sessions`).set(ns); 
+            db.ref(`teacher_app/students/${editSid}/data/${viewedMonth}/exam`).set(parseInt(document.getElementById('mExamScore').value) || 0).then(() => { alert("تم حفظ تعديلات الطالب بنجاح! ✅"); closeModal(); });
+        }
+        
+        window.banStudent = function() {
+            if(confirm("متأكد إنك عايز تطرد الطالب ده نهائياً؟ مش هيعرف يفتح الأكونت بتاعه تاني!")) {
+                db.ref(`teacher_app/students/${editSid}/banned`).set(true).then(() => {
+                    alert("تم حظر الطالب! هتلاقيه دلوقتي في البلاك ليست 🚫");
+                    closeModal();
+                });
+            }
+        }
+
+        window.unbanStudent = function(sid) {
+            if(confirm("متأكد إنك عايز تفك الحظر وترجع الطالب ده للمجموعة؟")) {
+                db.ref(`teacher_app/students/${sid}/banned`).remove().then(() => alert("تم فك الحظر، الطالب رجع مجموعته! ✅"));
+            }
+        }
+        
+        window.deleteBannedStudent = function(sid) {
+            if(confirm("تحذير خطير: هل أنت متأكد إنك عايز تمسح الطالب ده بكل بياناته من السيستم للأبد؟")) {
+                db.ref(`teacher_app/students/${sid}`).remove().then(() => alert("تم مسح الطالب من السيستم نهائياً! 🗑️"));
+            }
+        }
+
+        window.deleteStudent = function() {
+            if(confirm("تحذير خطير: هل أنت متأكد إنك عايز تمسح الطالب ده بكل بياناته ودرجاته وحضوره للأبد؟ مفيش تراجع عن الخطوة دي!")) {
+                db.ref(`teacher_app/students/${editSid}`).remove().then(() => {
+                    alert("تم مسح الطالب من السيستم نهائياً! 🗑️");
+                    closeModal();
+                });
+            }
+        }
+        
+        window.closeModal = function() { document.getElementById('studentModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
